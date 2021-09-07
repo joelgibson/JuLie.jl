@@ -114,6 +114,7 @@ include("kostka_polynomials.jl")
 include("schur_polynomials.jl")
 #include("block_matrices.jl")
 include("cartan_matrices.jl")
+include("coxeter_groups.jl")
 
 
 

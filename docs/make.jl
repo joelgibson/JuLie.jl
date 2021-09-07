@@ -26,6 +26,8 @@ makedocs(
 			"partitions.md"
 			],
 
+		"Coxeter groups" => "coxeter_groups.md",
+
 		"Lie theory" => "lie-theory.md",
 
 		"Index" => "julie-index.md"
