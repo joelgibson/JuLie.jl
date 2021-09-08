@@ -48,7 +48,7 @@ import AbstractAlgebra:
 import Nemo:
 
 	# Basic rings
-	fmpz, ZZ, fmpq, QQ, FiniteField, CyclotomicField, nf_elem,
+	fmpz, ZZ, fmpq, QQ, FiniteField, CyclotomicField, nf_elem, CalciumField,
 
 	# Univariate polynomials
 	fmpz_poly, FmpzPolyRing, fmpq_poly, FmpqPolyRing,
@@ -57,7 +57,7 @@ import Nemo:
 	fmpz_mpoly, FmpzMPolyRing, fmpq_mpoly, FmpqMPolyRing,
 
 	# Matrices
-	fmpz_mat, FmpzMatSpace, fmpq_mat, FmpqMatSpace,
+	fmpz_mat, FmpzMatSpace, fmpq_mat, FmpqMatSpace, MatrixSpace,
 
 	# Libs
 	libflint,

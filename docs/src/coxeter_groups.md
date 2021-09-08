@@ -1,20 +1,30 @@
 # Coxeter Groups
 
-A *Coxeter system* $(W, S)$ is a group $W$ together with a set of generators $S$, such that $W$ has the presentation
-
-$W = \langle S \mid (st)^{m_{st}} = 1 \text{ for all } s, t \in S \rangle,$
-
-where $m_{ss} = 1$ and $m_{st} \in \{0, 2, 3, 4, \ldots\}$ for $s \neq t$, with $m_{st} = 0$ meaning that there is no relation (the symbol $m_{st} = \infty$ is used in most literature on Coxeter systems). A *Coxeter group* is a group $W$ admitting a set of generators $S \subseteq W$ such that $(W, S)$ is a Coxeter system. The *rank* of a Coxeter system is $|S|$.
-
-In JuLie, a Coxeter group will always be represented as a Coxeter system, with a finite set $S$ of generators. There is a common [abstract interface](@ref coxeter_abstract_interface) for working with Coxeter groups, and multiple different concrete implementations:
+JuLie provides an [abstract interface](@ref abstract-interface) for working with Coxeter group and Coxeter group elements, and then various concrete implementations of Coxeter groups:
 
 - The [Matrix representation](@ref) represents elements as pairs of matrices (a group element and its inverse) acting on the basis of simple roots. It is a baseline implementation, slow but simple, and used to double-check the other implementations.
 
 
+## Notation
 
-## [Abstract interface] (@id coxeter_abstract_interface)
+A *Coxeter system* $(W, S)$ is a group $W$ together with a set of generating involutions $S$, such that the group has presentation
 
-There are two abstract supertypes:
+$W = \langle S \mid s^2 = 1, (st)^{m_{st}} = 1 \text{ for all } s, t \in S \text{ with } m_{st} \neq 0 \rangle,$
+
+for some integers $m_{st} = m_{ts} \in \{0, 2, 3, 4, \ldots\}$. (In the literature it is standard to use $m_{st} = \infty$ to mean no relation between $s$ and $t$, wheras in JuLie we use $m_{st} = 0$). In JuLie a Coxeter group will always be represented by a Coxeter system, with the generators numbered $\{1, \ldots, r\}$ where $r$ is the *rank* of the Coxeter system.
+
+A *Coxeter matrix* $[m_{st}]_{s, t \in S}$ is a square symmetric matrix such that $m_{ss} = 1$ for all $s \in S$, and $m_{st} \in \{0, 2, 3, 4, \ldots\}$ for all $s \neq t$. Each Coxeter matrix determines a unique Coxeter system. A Coxeter matrix or Coxeter group is called *crystallographic* if $m_{st} \in \{0, 2, 3, 4, 6\}$ for all $s \neq t$.
+
+A *Cartan matrix* is a square matrix $A = [a_{st}]_{s, t \in S}$ with real entries such that $a_{ss} = 2$ for all $s \in S$, $a_{st} \leq 0$ for all $s \neq t$, $a_{st} = 0 \iff a_{ts} = 0$, and if $a_{st}a_{ts} < 4$ for $s \neq t$, then $a_{st}a_{ts} = 4 \cos^2(\pi/m_{st})$ for some integers $m_{st} \geq 2$. A Cartan matrix determines a Coxeter matrix via the rules $m_{st} = 0$ if $a_{st}a_{ts} \geq 4$, and otherwise $4 \cos^2(\pi/m_{st}) = a_{st} a_{ts}$. Note that $a_{st}a_{ts} = 0, 1, 2, 3$ implies $m_{st} = 2, 3, 4, 6$ respectively. A Cartan matrix is called *crystallographic* if it has integer entries, and in this case the resulting Coxeter system is also crystallographic, but a crystallographic Coxeter group may admit non-crystallographic Cartan matrices.
+
+A Cartan matrix records some essential information about a faithful reflection representation of a Coxeter group. Let $V$ be a finite-dimensional real vector space and suppose there exist sets $\{\alpha_s\}_{s \in S} \subseteq V$ and $\{\alpha_s^\vee\}_{s \in S} \subseteq V^*$ such that $\langle \alpha_s^\vee, \alpha_t \rangle = a_{st}$. The reflections $r_s \colon V \to V$ defined by $r_s(v) = v - \langle \alpha_s^\vee, v \rangle \alpha_s$ then form a representation of $W$ inside $\operatorname{GL}(V)$, and provided that either the *simple roots* $\{\alpha_s\}$ or the *simple coroots* $\{\alpha_t\}$ are linearly independent, this representation is faithful.
+
+Taking $V$ to be the vector space with basis $\{\alpha_s\}_{s \in S}$ always yields such a faithful representation, for any Cartan matrix. Finally, given any Coxeter matrix $[m_{st}]_{s, t \in S}$, a compatible Cartan matrix is made by setting $a_{st} = -2 \cos(\pi / m_{st})$ for all $m_{st} \geq 1$, and $a_{st} = 2$ if $m_{st} = 0$: this resulting representation $V$ is called the *geometric representation* of the Coxeter system.
+
+
+## [Abstract interface](@id abstract-interface)
+
+There are two abstract supertypes, one to represent Coxeter groups (i.e. Coxeter systems), and another to represent group elements:
 
 ```@docs
 CoxGrp
@@ -25,10 +35,10 @@ A minimal implementation of a Coxeter group is a group object subtyping `CoxGrp`
 
 | Required methods                  | Brief description                                      |
 |:----------------------------------|:-------------------------------------------------------|
-| `rank(W::CoxGrp)`                 | The rank of the Coxeter group, a nonnegative integer   |
+| `rank(W::CoxGrp)`                 | The rank of the Coxeter group, a nonnegative integer.  |
 | `gens(W::CoxGrp)`                 | A list of length `rank(grp)`, the standard generators. |
 | `one(W::CoxGrp)`                  | The identity element.                                  |
-| `parent(x::CoxElt)`               | Return the group object                                |
+| `parent(x::CoxElt)`               | Return the group object.                               |
 | `left_descent_set(x::CoxElt)`     | A sub-`BitSet` of `1:rank(grp)`                        |
 | `right_descent_set(x::CoxElt)`    | A sub-`BitSet` of `1:rank(grp)`                        |
 | `mult_gen(s::Integer, x::CoxElt)` | Left multiplication by the generator with index `s`    |
@@ -39,8 +49,10 @@ In addition, the element object should provide implementations for `isequal`, `=
 ```@docs
 length(::CoxElt)
 isone(::CoxElt)
+iterate(::CoxElt)
 lexword(::CoxElt)
 *(::CoxElt, ::CoxElt)
+^(::CoxElt, ::Integer)
 ```
 
 
